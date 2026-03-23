@@ -1,64 +1,59 @@
-import AuthModal from "../common/AuthModal.jsx" ;
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect } from "react";
 import { toast } from "react-toastify";
 import userApi from "../../api/modules/user.api.js";
-import favoriteApi from "../../api/modules/favorite.api.js" ;
-import {setListFavorites , setUser} from  "../../redux/features/userSlice.js" ; 
+import favoriteApi from "../../api/modules/favorite.api.js";
+import { setListFavorites, setUser } from "../../redux/features/userSlice.js";
 import { Box } from "@mui/material";
 import { Outlet } from "react-router-dom";
-import Footer from "../common/Footer.jsx" ;
-import GlobalLoading from "../common/GlobalLoading.jsx" ; 
-import Topbar from "../common/Topbar.jsx" ;
-
-
+import Footer from "../common/Footer.jsx";
+import Topbar from "../common/Topbar.jsx";
 
 const MainLayout = () => {
+  const dispatch = useDispatch();
+  const { user } = useSelector((state) => state.user);
 
-    const dispatch = useDispatch(); 
-    const {user} = useSelector((state) => state.user) ;
+  // Check if token exists and get user info on app load
+  useEffect(() => {
+    const authUser = async () => {
+      const token = localStorage.getItem("actkn");
 
-    useEffect(() => {
+      // ✅ Skip API call entirely if no token
+      if (!token) {
+        dispatch(setUser(null));
+        return;
+      }
 
-        const authUser = async () => {
-            const {response , err} = await userApi.getInfo() ; 
+      const { response, err } = await userApi.getInfo();
 
-            if(response)dispatch(setUser(response)) ; 
-            if(err)dispatch(setUser(null)) ;
-        } ; 
+      if (response) dispatch(setUser(response));
+      if (err) {
+        // ✅ Silently clear user on 401, don't toast
+        dispatch(setUser(null));
+      }
+    };
 
-        authUser() ;
-    } , [dispatch]) ; 
+    authUser();
+  }, [dispatch]);
 
-    useEffect(() => {
+  // Load favorites when user logs in
+  useEffect(() => {
+    const getFavorites = async () => {
+  const result = await favoriteApi.getList();
+  if (!result) return;
+  const { response, err } = result;
+  if (response) dispatch(setListFavorites(response.results || response));
+  if (err) toast.error(err.message || "Failed to load favorites");
+};
 
-        const getFavorites = async() => {
-            const {response , err} = await favoriteApi.getList() ;
+    if (user) getFavorites();
+    if (!user) dispatch(setListFavorites([]));
+  }, [user, dispatch]);
 
-            if(response)dispatch(setListFavorites(response)) ; 
-            if(err)toast.error(err.message) ;
-        };
-
-        if(user)getFavorites() ; 
-        if(!user)dispatch(setListFavorites([])) ;
-    } , [user , dispatch])
-
-    return (
-        <>
-      {/* global loading */}
-      <GlobalLoading />
-      {/* global loading */}
-
-      {/* login modal */}
-      <AuthModal />
-      {/* login modal */}
-
+  return (
+    <>
       <Box display="flex" minHeight="100vh">
-        {/* header */}
         <Topbar />
-        {/* header */}
-
-        {/* main */}
         <Box
           component="main"
           flexGrow={1}
@@ -67,14 +62,10 @@ const MainLayout = () => {
         >
           <Outlet />
         </Box>
-        {/* main */}
       </Box>
-
-      {/* footer */}
       <Footer />
-      {/* footer */}
     </>
-    );
+  );
 };
 
 export default MainLayout;

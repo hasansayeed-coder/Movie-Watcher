@@ -29,6 +29,8 @@ import PosterSlide from "../components/common/PosterSlide.jsx";
 import RecommendSlide from "../components/common/RecommendSlide.jsx";
 import MediaSlide from "../components/common/MediaSlide.jsx";
 import MediaReview from "../components/common/MediaReview.jsx";
+import recentlyViewedApi from "../api/modules/recentlyViewed.api.js";
+import { addRecentlyViewed } from "../redux/features/userSlice";
 
 const MediaDetail = () => {
   const { mediaType, mediaId } = useParams();
@@ -47,18 +49,31 @@ const MediaDetail = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
     const getMedia = async () => {
-      dispatch(setGlobalLoading(true));
-      const { response, err } = await mediaApi.getDetail({ mediaType, mediaId });
-      dispatch(setGlobalLoading(false));
+  dispatch(setGlobalLoading(true));
+  const { response, err } = await mediaApi.getDetail({ mediaType, mediaId });
+  dispatch(setGlobalLoading(false));
 
-      if (response) {
-        setMedia(response);
-        setIsFavorite(response.isFavorite);
-        setGenres(response.genres.splice(0, 2));
-      }
+  if (response) {
+    setMedia(response);
+    setIsFavorite(response.isFavorite);
+    setGenres(response.genres.splice(0, 2));
 
-      if (err) toast.error(err.message);
-    };
+    // ✅ Auto-track recently viewed if user is logged in
+    if (user) {
+      const { response: rvResponse } = await recentlyViewedApi.add({
+        mediaId: response.id,
+        mediaType,
+        mediaTitle: response.title || response.name,
+        mediaPoster: response.poster_path,
+        mediaRate: response.vote_average
+      });
+
+      if (rvResponse) dispatch(addRecentlyViewed(rvResponse));
+    }
+  }
+
+  if (err) toast.error(err.message);
+};
 
     getMedia();
   }, [mediaType, mediaId, dispatch]);
@@ -249,7 +264,7 @@ const MediaDetail = () => {
           {/* media posters */}
 
           {/* media reviews */}
-          <MediaReview reviews={media.reviews} media={media} mediaType={mediaType} />
+          <MediaReview reviews={media.reviews?.results || media.reviews || []} media={media} mediaType={mediaType} />
           {/* media reviews */}
 
           {/* media recommendation */}

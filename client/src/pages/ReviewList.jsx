@@ -40,7 +40,7 @@ const ReviewItem = ({ review, onRemoved }) => {
     }}>
       <Box sx={{ width: { xs: 0, md: "10%" } }}>
         <Link
-          to={routesGen.mediaDetail(review.mediaType, review.mediaid)}
+          to={routesGen.mediaDetail(review.mediaType, review.mediaId)}
           style={{ color: "unset", textDecoration: "none" }}
         >
           <Box sx={{
@@ -56,7 +56,7 @@ const ReviewItem = ({ review, onRemoved }) => {
       }}>
         <Stack spacing={1}>
           <Link
-            to={routesGen.mediaDetail(review.mediaType, review.mediaid)}
+            to={routesGen.mediaDetail(review.mediaType, review.mediaId)}
             style={{ color: "unset", textDecoration: "none" }}
           >
             <Typography
@@ -105,13 +105,13 @@ const ReviewList = () => {
   useEffect(() => {
     const getReviews = async () => {
       dispatch(setGlobalLoading(true));
-      const { response, err } = await reviewApi.getList();
+      const { response, err } = await reviewApi.getList({ page: 1, pageSize: 5 });
       dispatch(setGlobalLoading(false));
 
       if (err) toast.error(err.message);
       if (response) {
-        setCount(response.length);
-        setReviews([...response]);
+      setCount(response.totalResults);
+      setReviews(response.results);
         setFilteredReviews([...response].splice(0, skip));
       }
     };

@@ -59,14 +59,14 @@ const FavoriteList = () => {
   useEffect(() => {
     const getFavorites = async () => {
       dispatch(setGlobalLoading(true));
-      const { response, err } = await favoriteApi.getList();
+      const { response, err } = await favoriteApi.getList({ page: 1, pageSize: 8 });
       dispatch(setGlobalLoading(false));
 
       if (err) toast.error(err.message);
       if (response) {
-        setCount(response.length);
-        setMedias([...response]);
-        setFilteredMedias([...response].splice(0, skip));
+        setCount(response.totalResults);
+        setMedias(response.results);
+        setFilteredMedias(response.results);
       }
     };
 
@@ -90,7 +90,7 @@ const FavoriteList = () => {
       <Container header={`Your favorites (${count})`}>
         <Grid container spacing={1} sx={{ marginRight: "-8px!important" }}>
           {filteredMedias.map((media, index) => (
-            <Grid item xs={6} sm={4} md={3} key={index}>
+            <Grid size={{ xs: 6, sm: 4, md: 3 }}>
               <FavoriteItem media={media} onRemoved={onRemoved} />
             </Grid>
           ))}

@@ -1,7 +1,7 @@
 import axios from "axios";
 import queryString from "query-string";
 
-const baseURL = "http://localhost:3003/api/v1" ;
+const baseURL = process.env.REACT_APP_API_URL || "http://localhost:5000/api/v1";
 
 const publicClient = axios.create({
   baseURL,
@@ -23,7 +23,7 @@ publicClient.interceptors.response.use((response) => {
   if (response && response.data) return response.data;
   return response;
 }, (err) => {
-  throw err.response.data;
+  throw err.response?.data || { message: "Network error. Please try again." };
 });
 
 export default publicClient;

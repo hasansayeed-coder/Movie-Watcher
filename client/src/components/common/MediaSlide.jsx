@@ -11,7 +11,6 @@ const MediaSlide = ({ mediaType, mediaCategory }) => {
 
   useEffect(() => {
     const getMedias = async () => {
-      console.log('🎬 Fetching:', mediaType, mediaCategory); // ✅ Debug log
       setLoading(true);
 
       const { response, err } = await mediaApi.getList({
@@ -20,11 +19,7 @@ const MediaSlide = ({ mediaType, mediaCategory }) => {
         page: 1,
       });
 
-      console.log('📦 Response:', response); // ✅ Debug log
-      console.log('❌ Error:', err); // ✅ Debug log
-
       if (response) {
-        console.log('✅ Results:', response.results); // ✅ Debug log
         setMedias(response.results || []);
       }
 

@@ -5,6 +5,9 @@ import FavoriteBorderOutlinedIcon from "@mui/icons-material/FavoriteBorderOutlin
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import RateReviewOutlinedIcon from "@mui/icons-material/RateReviewOutlined";
 import LockResetOutlinedIcon from "@mui/icons-material/LockResetOutlined";
+import WatchLaterOutlinedIcon from "@mui/icons-material/WatchLaterOutlined";      // ← add
+import HistoryOutlinedIcon from "@mui/icons-material/HistoryOutlined";            // ← add
+import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined"; // ← add
 
 const main = [
   {
@@ -35,10 +38,28 @@ const main = [
 
 const user = [
   {
+    display: "profile",
+    path: "/profile",
+    icon: <AccountCircleOutlinedIcon />,
+    state: "user.profile"
+  },
+  {
     display: "favorites",
     path: "/favorites",
     icon: <FavoriteBorderOutlinedIcon />,
     state: "favorite"
+  },
+  {
+    display: "watchlist",
+    path: "/watchlist",
+    icon: <WatchLaterOutlinedIcon />,
+    state: "watchlist"
+  },
+  {
+    display: "recently viewed",
+    path: "/recently-viewed",
+    icon: <HistoryOutlinedIcon />,
+    state: "recently.viewed"
   },
   {
     display: "reviews",

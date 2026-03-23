@@ -1,5 +1,6 @@
 import responseHandler from "../handlers/response.handler.js";
 import favoriteModel from "../models/favorite.model.js";
+import paginate from "../utils/paginate.js";
 
 const addFavorite = async (req, res) => {
   try {
@@ -34,8 +35,8 @@ const removeFavorite = async (req, res) => {
 
     if (!favorite) return responseHandler.notfound(res);
 
-    await favorite.remove();
-
+    await favoriteModel.deleteOne({ _id: favorite._id });
+    
     responseHandler.ok(res);
   } catch {
     responseHandler.error(res);
@@ -44,9 +45,18 @@ const removeFavorite = async (req, res) => {
 
 const getFavoritesOfUser = async (req, res) => {
   try {
-    const favorite = await favoriteModel.find({ user: req.user.id }).sort("-createdAt");
+    const page = parseInt(req.query.page) || 1;
+    const pageSize = parseInt(req.query.pageSize) || 10;
 
-    responseHandler.ok(res, favorite);
+    const result = await paginate(
+      favoriteModel,
+      { user: req.user.id },
+      "-createdAt",
+      page,
+      pageSize
+    );
+
+    responseHandler.ok(res, result);
   } catch {
     responseHandler.error(res);
   }

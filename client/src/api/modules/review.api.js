@@ -36,9 +36,9 @@ const reviewApi = {
       return { response };
     } catch (err) { return { err }; }
   },
-  getList: async () => {
+  getList: async ({ page = 1, pageSize = 10 } = {}) => {
     try {
-      const response = await privateClient.get(reviewEndpoints.list);
+      const response = await privateClient.get(`${reviewEndpoints.list}?page=${page}&pageSize=${pageSize}`);
 
       return { response };
     } catch (err) { return { err }; }

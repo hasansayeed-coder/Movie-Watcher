@@ -7,6 +7,8 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import MainLayout from "./components/layout/MainLayout.jsx";
 import routes from "./routes/routes.jsx";
 import PageWrapper from "./components/common/PageWrapper.jsx";
+import AuthModal from "./components/common/AuthModal.jsx";        // ← add
+import GlobalLoading from "./components/common/GlobalLoading.jsx"; // ← add
 
 import "react-toastify/dist/ReactToastify.css";
 import "swiper/css";
@@ -18,7 +20,6 @@ const App = () => {
 
   return (
     <ThemeProvider theme={themeConfigs.custom({ mode: themeMode })}>
-      {/* config toastify */}
       <ToastContainer
         position="bottom-left"
         autoClose={5000}
@@ -29,11 +30,11 @@ const App = () => {
         pauseOnHover
         theme={themeMode}
       />
-      {/* mui reset css */}
       <CssBaseline />
 
-      {/* app routes */}
       <BrowserRouter>
+        <GlobalLoading />  {/* ← add */}
+        <AuthModal />      {/* ← add */}
         <Routes>
           <Route path="/" element={<MainLayout />}>
             {routes.map((route, index) => (
@@ -58,7 +59,6 @@ const App = () => {
           </Route>
         </Routes>
       </BrowserRouter>
-      {/* app routes */}
     </ThemeProvider>
   );
 };

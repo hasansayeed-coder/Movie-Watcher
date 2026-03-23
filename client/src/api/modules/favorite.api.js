@@ -7,13 +7,17 @@ const favoriteEndpoints = {
 };
 
 const favoriteApi = {
-  getList: async () => {
-    try {
-      const response = await privateClient.get(favoriteEndpoints.list);
+  
 
-      return { response };
-    } catch (err) { return { err }; }
-  },
+  getList: async ({ page = 1, pageSize = 100 } = {}) => {
+  try {
+    const response = await privateClient.get(
+      `${favoriteEndpoints.list}?page=${page}&pageSize=${pageSize}`
+    );
+    return { response };
+  } catch (err) { return { err }; }
+},
+  
   add: async ({
     mediaId,
     mediaType,

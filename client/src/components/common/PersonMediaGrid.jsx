@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import tmdbConfigs from "../../api/configs/tmdb.configs.js" ; 
 import personApi from '../../api/modules/person.api.js';
-import MediaItem from "./MediaItem.jsx" ;;
+import MediaItem from "./MediaItem.jsx" ;
 
 
 const PersonMediaGrid = ({personId}) => {
@@ -47,7 +47,7 @@ const PersonMediaGrid = ({personId}) => {
         <>
            <Grid container spacing={1} sx={{ marginRight: "-8px!important" }}>
                 {filteredMedias.map((media, index) => (
-                    <Grid item xs={6} sm={4} md={3} key={index}>
+                    <Grid size={{ xs: 6, sm: 4, md: 3 }}>
                     <MediaItem media={media} mediaType={media.media_type} />
                     </Grid>
                 ))}

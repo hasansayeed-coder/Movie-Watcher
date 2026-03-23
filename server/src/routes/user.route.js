@@ -5,14 +5,16 @@ import userController from "../controllers/user.controller.js";
 import requestHandler from "../handlers/request.handler.js";
 import userModel from "../models/user.model.js";
 import tokenMiddleware from "../middlewares/token.middleware.js";
+import { signinLimiter, signupLimiter } from "../middlewares/rateLimiter.middleware.js";
 
 const router = express.Router();
 
 router.post(
   "/signup",
+  signupLimiter,
   body("username")
     .exists().withMessage("username is required")
-    .isLength({ min: 8 }).withMessage("username minimum 8 characters")
+    .isEmail().withMessage("username must be a valid email address")
     .custom(async value => {
       const user = await userModel.findOne({ username: value });
       if (user) return Promise.reject("username already used");
@@ -36,14 +38,32 @@ router.post(
 
 router.post(
   "/signin",
+  signinLimiter,
   body("username")
     .exists().withMessage("username is required")
-    .isLength({ min: 8 }).withMessage("username minimum 8 characters"),
+    .isEmail().withMessage("username must be a valid email address"),
   body("password")
     .exists().withMessage("password is required")
     .isLength({ min: 8 }).withMessage("password minimum 8 characters"),
   requestHandler.validate,
   userController.signin
+);
+
+router.post(
+  "/signout",
+  tokenMiddleware.auth,
+  userController.signout
+);
+
+router.get(
+  "/verify-email",
+  userController.verifyEmail
+);
+
+router.post(
+  "/resend-verification",
+  tokenMiddleware.auth,
+  userController.resendVerification
 );
 
 router.put(
@@ -101,6 +121,34 @@ router.delete(
   "/favorites/:favoriteId",
   tokenMiddleware.auth,
   favoriteController.removeFavorite
+);
+
+// Forgot password — no auth needed
+router.post(
+  "/forgot-password",
+  body("username")
+    .exists().withMessage("username is required")
+    .isEmail().withMessage("username must be a valid email address"),
+  requestHandler.validate,
+  userController.forgotPassword
+);
+
+// Reset password — no auth needed (user is logged out)
+router.post(
+  "/reset-password",
+  body("token")
+    .exists().withMessage("token is required"),
+  body("newPassword")
+    .exists().withMessage("newPassword is required")
+    .isLength({ min: 8 }).withMessage("newPassword minimum 8 characters"),
+  body("confirmNewPassword")
+    .exists().withMessage("confirmNewPassword is required")
+    .custom((value, { req }) => {
+      if (value !== req.body.newPassword) throw new Error("confirmNewPassword not match");
+      return true;
+    }),
+  requestHandler.validate,
+  userController.resetPassword
 );
 
 export default router;

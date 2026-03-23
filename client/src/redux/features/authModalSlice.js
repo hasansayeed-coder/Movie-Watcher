@@ -2,9 +2,7 @@ import { createSlice } from "@reduxjs/toolkit";
 
 export const authModalSlice = createSlice({
   name: "AuthModal",
-  initialState: {
-    authModalOpen: false
-  },
+  initialState: { authModalOpen: false },
   reducers: {
     setAuthModalOpen: (state, action) => {
       state.authModalOpen = action.payload;
@@ -12,8 +10,5 @@ export const authModalSlice = createSlice({
   }
 });
 
-export const {
-  setAuthModalOpen
-} = authModalSlice.actions;
-
+export const { setAuthModalOpen } = authModalSlice.actions;
 export default authModalSlice.reducer;

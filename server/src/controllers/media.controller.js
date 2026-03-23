@@ -3,7 +3,10 @@ import tmdbApi from "../tmdb/tmdb.api.js";
 import userModel from "../models/user.model.js";
 import favoriteModel from "../models/favorite.model.js";
 import reviewModel from "../models/review.model.js";
-import tokenMiddlerware from "../middlewares/token.middleware.js";
+import tokenMiddleware from "../middlewares/token.middleware.js";
+import watchlistModel from "../models/watchlist.model.js";
+import reviewVoteModel from "../models/reviewVote.model.js";
+
 
 const getList = async (req, res) => {
   try {
@@ -61,36 +64,76 @@ const search = async (req, res) => {
 const getDetail = async (req, res) => {
   try {
     const { mediaType, mediaId } = req.params;
-
     const params = { mediaType, mediaId };
+    const page = parseInt(req.query.page) || 1;
+    const pageSize = parseInt(req.query.pageSize) || 5;
 
     const media = await tmdbApi.mediaDetail(params);
-    media.credits = await tmdbApi.mediaCredits(params);
 
-    const videos = await tmdbApi.mediaVideos(params);
+    const [credits, videos, recommend, images] = await Promise.all([
+      tmdbApi.mediaCredits(params),
+      tmdbApi.mediaVideos(params),
+      tmdbApi.mediaRecommend(params),
+      tmdbApi.mediaImages(params)
+    ]);
+
+    media.credits = credits;
     media.videos = videos;
-
-    const recommend = await tmdbApi.mediaRecommend(params);
     media.recommend = recommend.results;
+    media.images = images;
 
-    media.images = await tmdbApi.mediaImages(params);
+    // Decode token once — used for both isFavorite/isInWatchlist and voted
+    const tokenDecoded = tokenMiddleware.tokenDecode(req);
+    const currentUser = tokenDecoded
+      ? await userModel.findById(tokenDecoded.data)
+      : null;
 
-    const tokenDecoded = tokenMiddlerware.tokenDecode(req);
-
-    if (tokenDecoded) {
-      const user = await userModel.findById(tokenDecoded.data);
-
-      if (user) {
-        const isFavorite = await favoriteModel.findOne({ user: user.id, mediaId });
-        media.isFavorite = isFavorite !== null;
-      }
+    if (currentUser) {
+      const [isFavorite, isInWatchlist] = await Promise.all([
+        favoriteModel.findOne({ user: currentUser.id, mediaId }),
+        watchlistModel.findOne({ user: currentUser.id, mediaId })
+      ]);
+      media.isFavorite = isFavorite !== null;
+      media.isInWatchlist = isInWatchlist !== null;
     }
 
-    media.reviews = await reviewModel.find({ mediaId }).populate("user").sort("-createdAt");
+    // Paginated reviews with vote counts
+    const skip = (page - 1) * pageSize;
+    const [reviewDocs, totalReviews] = await Promise.all([
+      reviewModel.find({ mediaId }).populate("user").sort("-createdAt").skip(skip).limit(pageSize),
+      reviewModel.countDocuments({ mediaId })
+    ]);
 
-    return responseHandler.ok(res, media);
-  } catch (error) {
-    console.error('❌ Error in getDetail:', error.message);
+    const reviewsWithVotes = await Promise.all(
+      reviewDocs.map(async (review) => {
+        const [likes, dislikes, userVote] = await Promise.all([
+          reviewVoteModel.countDocuments({ review: review.id, voteType: "like" }),
+          reviewVoteModel.countDocuments({ review: review.id, voteType: "dislike" }),
+          currentUser
+            ? reviewVoteModel.findOne({ review: review.id, user: currentUser.id })
+            : Promise.resolve(null)
+        ]);
+        return {
+          ...review.toJSON(),
+          likes,
+          dislikes,
+          voted: userVote ? userVote.voteType : null
+        };
+      })
+    );
+
+    media.reviews = {
+      results: reviewsWithVotes,
+      currentPage: page,
+      totalPages: Math.ceil(totalReviews / pageSize),
+      totalResults: totalReviews,
+      hasNextPage: page < Math.ceil(totalReviews / pageSize),
+      hasPrevPage: page > 1
+    };
+
+    responseHandler.ok(res, media);
+  } catch (e) {
+    console.log(e);
     responseHandler.error(res);
   }
 };

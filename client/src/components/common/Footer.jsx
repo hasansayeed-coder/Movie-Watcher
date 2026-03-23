@@ -43,13 +43,13 @@ const Footer = () => {
             color: 'gray',
           }}
         >
-          &copy; 2022 BertFlix Developed by{' '}
+          &copy; 2022 CineCritic Developed by{' '}
           <a
             style={{
               textDecoration: 'none',
               color: theme.palette.primary.main
             }}
-            href="https://berthutapea.vercel.app/"
+            href="https://www.instagram.com/m_hasan_sayeed/"
             target="_blank"
             rel="noopener noreferrer"
           >

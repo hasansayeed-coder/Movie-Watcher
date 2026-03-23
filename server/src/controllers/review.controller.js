@@ -1,13 +1,13 @@
 import responseHandler from "../handlers/response.handler.js";
 import reviewModel from "../models/review.model.js";
+import paginate from "../utils/paginate.js";
+import reviewVoteModel from "../models/reviewVote.model.js";
 
 const create = async (req, res) => {
   try {
-    const { movieId } = req.params;
 
     const review = new reviewModel({
       user: req.user.id,
-      movieId,
       ...req.body
     });
 
@@ -34,7 +34,7 @@ const remove = async (req, res) => {
 
     if (!review) return responseHandler.notfound(res);
 
-    await review.remove();
+    await reviewModel.deleteOne({ _id: reviewId, user: req.user.id });
 
     responseHandler.ok(res);
   } catch {
@@ -44,11 +44,35 @@ const remove = async (req, res) => {
 
 const getReviewsOfUser = async (req, res) => {
   try {
-    const reviews = await reviewModel.find({
-      user: req.user.id
-    }).sort("-createdAt");
+    const page = parseInt(req.query.page) || 1;
+    const pageSize = parseInt(req.query.pageSize) || 10;
 
-    responseHandler.ok(res, reviews);
+    const result = await paginate(
+      reviewModel,
+      { user: req.user.id },
+      "-createdAt",
+      page,
+      pageSize
+    );
+
+    // Attach vote counts + user's own vote to each review
+    const enriched = await Promise.all(
+      result.results.map(async (review) => {
+        const [likes, dislikes, userVote] = await Promise.all([
+          reviewVoteModel.countDocuments({ review: review.id, voteType: "like" }),
+          reviewVoteModel.countDocuments({ review: review.id, voteType: "dislike" }),
+          reviewVoteModel.findOne({ review: review.id, user: req.user.id })
+        ]);
+        return {
+          ...review.toJSON(),
+          likes,
+          dislikes,
+          voted: userVote ? userVote.voteType : null
+        };
+      })
+    );
+
+    responseHandler.ok(res, { ...result, results: enriched });
   } catch {
     responseHandler.error(res);
   }

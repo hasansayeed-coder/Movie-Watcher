@@ -100,7 +100,7 @@ const Sidebar = ({open , toggleSidebar}) => {
             sx={{
                 "& .MuiDrawer-Paper": {
                 boxSizing: "border-box",
-                widh: sidebarWidth,
+                width: sidebarWidth,
                 borderRight: "0px"
         }
       }}>
