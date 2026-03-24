@@ -76,7 +76,7 @@ const MediaDetail = () => {
 };
 
     getMedia();
-  }, [mediaType, mediaId, dispatch]);
+  }, [mediaType, mediaId, dispatch , user]);
 
   const onFavoriteClick = async () => {
     if (!user) return dispatch(setAuthModalOpen(true));
