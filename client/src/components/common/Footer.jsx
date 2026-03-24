@@ -43,7 +43,7 @@ const Footer = () => {
             color: 'gray',
           }}
         >
-          &copy; 2022 CineCritic Developed by{' '}
+          &copy; 2026 CineCritic Developed by{' '}
           <a
             style={{
               textDecoration: 'none',
