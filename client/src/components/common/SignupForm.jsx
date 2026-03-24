@@ -31,24 +31,26 @@ const SignupForm = ({switchAuthState}) => {
             displayName : Yup.string().min(8 , "displayName minimum 8 characters").required("displayName is required") ,
             confirmPassword : Yup.string().oneOf([Yup.ref("password")] , "confirmPassword not match").min(8 , "confirmPassword minimum 8 characters").required("confirmPassword is required")
         }) , 
-        onSubmit : async values => {
-            setErrorMessage(undefined) ; 
-            setIsLoginRequest(true) ; 
+        onSubmit: async values => {
+  setErrorMessage(undefined);
+  setIsLoginRequest(true);
 
-            const {response , err} = await userApi.signup(values);
+  const { response, err } = await userApi.signup(values);
 
-            setIsLoginRequest(false);
+  setIsLoginRequest(false); // ← always runs now
 
-            if(response){
-                signinForm.resetForm() ; 
-                dispatch(setUser(response)) ; 
-                dispatch(setAuthModalOpen(false)) ; 
+  if (err) {
+    setErrorMessage(err.message);
+    return;
+  }
 
-                toast.success("Sign up Success");
-            }
-
-            if(err)setErrorMessage(err.message) ;
-        }
+  if (response) {
+    signinForm.resetForm();
+    dispatch(setUser(response));
+    dispatch(setAuthModalOpen(false));
+    toast.success("Sign up success! Please check your email to verify your account.");
+  }
+}
     });
 
     return (
