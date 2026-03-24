@@ -16,24 +16,25 @@ const signup = async (req, res) => {
     user.username = username;
     user.setPassword(password);
 
-    // Generate verification token
     const token = user.generateVerificationToken();
     await user.save();
 
-    // Send verification email
-    const verificationUrl = `${process.env.CLIENT_URL}/verify-email?token=${token}`;
-    await sendEmail.sendVerificationEmail({
-      to: username, // if username is email — otherwise add an email field to the model
-      username: displayName,
-      verificationUrl
-    });
-
+    // ✅ Respond immediately — don't wait for email
     responseHandler.created(res, {
       id: user.id,
       username: user.username,
       displayName: user.displayName,
       isVerified: user.isVerified
     });
+
+    // ✅ Send email in background after response is sent
+    const verificationUrl = `${process.env.CLIENT_URL}/verify-email?token=${token}`;
+    sendEmail.sendVerificationEmail({
+      to: username,
+      username: displayName,
+      verificationUrl
+    }).catch(err => console.error("Email send failed:", err));
+
   } catch {
     responseHandler.error(res);
   }
@@ -180,6 +181,13 @@ const resendVerification = async (req, res) => {
     });
 
     responseHandler.ok(res, { message: "Verification email resent successfully" });
+
+    // Send in background
+sendEmail.sendVerificationEmail({
+  to: user.username,
+  username: user.displayName,
+  verificationUrl
+}).catch(err => console.error("Email send failed:", err));
   } catch {
     responseHandler.error(res);
   }
@@ -222,6 +230,12 @@ const forgotPassword = async (req, res) => {
     responseHandler.ok(res, {
       message: "If that email exists, a reset link has been sent."
     });
+
+    sendEmail.sendPasswordResetEmail({
+  to: user.username,
+  username: user.displayName,
+  resetUrl
+}).catch(err => console.error("Email send failed:", err));
   } catch {
     responseHandler.error(res);
   }
