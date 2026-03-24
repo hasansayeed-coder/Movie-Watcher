@@ -26,25 +26,27 @@ const SigninForm = ({switchAuthState}) => {
             username : Yup.string().required("username is required") , 
             password : Yup.string().required("password is required") ,
         }) , 
-        onSubmit : async values => {
-            setErrorMessage(undefined) ; 
-            setIsLoginRequest(true) ; 
-            console.log("asdasdasdasd") ;
+        onSubmit: async values => {
+  setErrorMessage(undefined);
+  setIsLoginRequest(true);
 
-            const {response , err}=await userApi.signin(values) ; 
+  try {
+    const { response, err } = await userApi.signin(values);
 
-            setIsLoginRequest(false) ;
+    if (err) setErrorMessage(err.message);
 
-            if(response){
-                signinForm.resetForm() ;
-                dispatch(setUser(response)) ;
-                dispatch(setAuthModalOpen(false)) ;
-
-                toast.success("Sign in success") ;
-            }
-
-            if(err)setErrorMessage(err.message) ;
-        }
+    if (response) {
+      signinForm.resetForm();
+      dispatch(setUser(response));
+      dispatch(setAuthModalOpen(false));
+      toast.success("Sign in success");
+    }
+  } catch (e) {
+    setErrorMessage("Something went wrong. Please try again.");
+  } finally {
+    setIsLoginRequest(false); // ← ALWAYS runs
+  }
+}
     }) ;
 
     return (

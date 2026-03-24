@@ -35,20 +35,21 @@ const SignupForm = ({switchAuthState}) => {
   setErrorMessage(undefined);
   setIsLoginRequest(true);
 
-  const { response, err } = await userApi.signup(values);
+  try {
+    const { response, err } = await userApi.signup(values);
 
-  setIsLoginRequest(false); // ← always runs now
+    if (err) setErrorMessage(err.message);
 
-  if (err) {
-    setErrorMessage(err.message);
-    return;
-  }
-
-  if (response) {
-    signinForm.resetForm();
-    dispatch(setUser(response));
-    dispatch(setAuthModalOpen(false));
-    toast.success("Sign up success! Please check your email to verify your account.");
+    if (response) {
+      signinForm.resetForm();
+      dispatch(setUser(response));
+      dispatch(setAuthModalOpen(false));
+      toast.success("Account created! Please verify your email.");
+    }
+  } catch (e) {
+    setErrorMessage("Something went wrong. Please try again.");
+  } finally {
+    setIsLoginRequest(false); // ← ALWAYS runs, even if error thrown
   }
 }
     });
